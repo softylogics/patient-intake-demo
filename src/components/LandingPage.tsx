@@ -31,8 +31,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onPatientDemo, onDocto
 
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="max-w-2xl w-full text-center">
-          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800">{t('demo_notice')}</p>
+          <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800">{t('disclaimer')}</p>
+          </div>
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-800">{t('privacy_notice')}</p>
+          </div>
+          <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800">{t('emergency_notice')}</p>
           </div>
 
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{t('tell_your_doctor')}</h2>

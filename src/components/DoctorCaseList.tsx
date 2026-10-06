@@ -28,15 +28,19 @@ export const DoctorCaseList: React.FC<DoctorCaseListProps> = ({ cases, onSelectC
                 <p className="text-sm font-medium text-gray-900">{case_.severity}/10</p>
                 <p className="text-xs text-gray-500">{case_.duration}</p>
               </div>
-              <span
-                className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  case_.status === 'New'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-green-100 text-green-700'
-                }`}
-              >
-                {t(case_.status.toLowerCase())}
-              </span>
+               <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    case_.redFlags && case_.redFlags.length > 0 && !case_.redFlags.includes('red_flag_none')
+                      ? 'bg-red-100 text-red-700'
+                      : case_.status === 'New'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-green-100 text-green-700'
+                  }`}
+                >
+                  {case_.redFlags && case_.redFlags.length > 0 && !case_.redFlags.includes('red_flag_none')
+                    ? t('triaged')
+                    : t(case_.status.toLowerCase())}
+                </span>
             </div>
           </div>
         </button>

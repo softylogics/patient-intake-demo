@@ -21,6 +21,19 @@ const steps = [
   { id: 6, label: 'Submit' },
 ];
 
+const allSymptoms = [
+  'symptom_tingling', 'symptom_stiffness', 'symptom_swelling', 'symptom_nausea',
+  'symptom_itching', 'symptom_redness', 'symptom_pain_when_bending',
+  'symptom_pain_when_walking', 'symptom_fever', 'symptom_bloating',
+  'symptom_fatigue', 'symptom_headache', 'symptom_visual_changes', 'symptom_weakness',
+  'symptom_numbness',
+];
+
+const redFlagKeys = [
+  'red_flag_chest_pain', 'red_flag_severe_headache', 'red_flag_difficulty_breathing',
+  'red_flag_confusion', 'red_flag_severe_pain', 'red_flag_fever_high', 'red_flag_bleeding',
+];
+
 const getQuestionsForArea = (_area: string, t: (key: string) => string) => {
   const baseQuestions = [
     {
@@ -51,7 +64,6 @@ const getQuestionsForArea = (_area: string, t: (key: string) => string) => {
       required: true,
     },
   ];
-
   return baseQuestions;
 };
 
@@ -62,10 +74,20 @@ export const PatientDemo: React.FC<PatientDemoProps> = ({ onBack, onSubmit }) =>
     setSelectedBodyArea,
     patientName,
     setPatientName,
+    patientAge,
+    setPatientAge,
+    patientGender,
+    setPatientGender,
+    genderPreference,
+    setGenderPreference,
     answers,
     setAnswer,
     description,
     setDescription,
+    symptoms,
+    toggleSymptom,
+    redFlags,
+    toggleRedFlag,
     attachments,
     setAttachments,
     currentStep,
@@ -75,12 +97,13 @@ export const PatientDemo: React.FC<PatientDemoProps> = ({ onBack, onSubmit }) =>
   } = useDemoData();
 
   const questions = selectedBodyArea ? getQuestionsForArea(selectedBodyArea, t) : [];
-
   const [isRecording, setIsRecording] = useState(false);
 
   const toggleRecording = () => {
     setIsRecording(prev => !prev);
   };
+
+  const hasRedFlags = redFlags.length > 0 && !redFlags.includes('red_flag_none');
 
   const handleNext = () => {
     if (currentStep === 2 && !selectedBodyArea) return;
@@ -109,17 +132,19 @@ export const PatientDemo: React.FC<PatientDemoProps> = ({ onBack, onSubmit }) =>
         .replace(/\b\w/g, c => c.toUpperCase());
       addCase({
         name: patientName.trim() || 'New Patient',
-        age: 0,
-        gender: 'Male',
+        age: patientAge || 0,
+        gender: patientGender || 'Male',
         complaint: `${areaDisplay} Pain`,
         bodyArea: areaDisplay,
         duration: answers['duration'] || '—',
         severity: parseInt(answers['severity']) || 0,
         painType: answers['pain_type'] || '—',
         radiation: answers['radiation'] || '—',
+        symptoms,
+        redFlags,
         description: description || '—',
         attachments: attachments.map(f => f.name),
-        status: 'New',
+        status: hasRedFlags ? 'New' : 'New',
       });
     }
     resetPatientData();
@@ -133,6 +158,9 @@ export const PatientDemo: React.FC<PatientDemoProps> = ({ onBack, onSubmit }) =>
           <div className="max-w-2xl mx-auto text-center space-y-8">
             <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <p className="text-sm text-amber-800">{t('disclaimer')}</p>
+            </div>
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">{t('privacy_notice')}</p>
             </div>
             <h2 className="text-3xl font-bold text-gray-900">{t('tell_your_doctor')}</h2>
             <p className="text-lg text-gray-600">{t('describe_problem')}</p>
@@ -169,16 +197,109 @@ export const PatientDemo: React.FC<PatientDemoProps> = ({ onBack, onSubmit }) =>
         return (
           <div className="max-w-2xl mx-auto space-y-6">
             <h3 className="text-xl font-semibold text-gray-900">{t('selected_area')} {t(selectedBodyArea?.replace(/_/g, ' ') || '')}</h3>
-            <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-2">
-              <label className="block text-sm font-medium text-gray-700">{t('your_name')}</label>
-              <input
-                type="text"
-                value={patientName}
-                onChange={(e) => setPatientName(e.target.value)}
-                placeholder={t('your_name_placeholder')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+            <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('age')}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="120"
+                    value={patientAge || ''}
+                    onChange={(e) => setPatientAge(parseInt(e.target.value) || 0)}
+                    placeholder={t('age_placeholder')}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('gender')}</label>
+                  <select
+                    value={patientGender}
+                    onChange={(e) => setPatientGender(e.target.value as 'Male' | 'Female' | '')}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="">{t('select_gender')}</option>
+                    <option value="Male">{t('male')}</option>
+                    <option value="Female">{t('female')}</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('gender_preference')}</label>
+                <div className="flex gap-3">
+                  {(['Any', 'Male', 'Female'] as const).map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setGenderPreference(opt)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        genderPreference === opt
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {opt === 'Any' ? t('gender_preference_any') : opt === 'Male' ? t('gender_preference_male') : t('gender_preference_female')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('your_name')}</label>
+                <input
+                  type="text"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                  placeholder={t('your_name_placeholder')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+              <p className="text-sm font-medium text-gray-700">{t('symptoms')}</p>
+              <div className="flex flex-wrap gap-2">
+                {allSymptoms.map(sym => (
+                  <button
+                    key={sym}
+                    type="button"
+                    onClick={() => toggleSymptom(sym)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      symptoms.includes(sym)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {t(sym)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 space-y-4">
+              <p className="text-sm font-semibold text-amber-800">{t('red_flags')}</p>
+              <div className="flex flex-wrap gap-2">
+                {redFlagKeys.map(flag => (
+                  <button
+                    key={flag}
+                    type="button"
+                    onClick={() => toggleRedFlag(flag)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      redFlags.includes(flag)
+                        ? 'bg-red-600 text-white'
+                        : 'bg-white text-gray-700 border border-red-300 hover:bg-red-50'
+                    }`}
+                  >
+                    {t(flag)}
+                  </button>
+                ))}
+              </div>
+              {hasRedFlags && (
+                <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
+                  <p className="text-sm text-red-800 font-medium">{t('emergency_notice')}</p>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-6">
               {questions.map(q => (
                 <QuestionCard
@@ -273,6 +394,8 @@ export const PatientDemo: React.FC<PatientDemoProps> = ({ onBack, onSubmit }) =>
             answers={answers}
             description={description}
             attachments={attachments}
+            symptoms={symptoms}
+            redFlags={redFlags}
             onEdit={() => setCurrentStep(3)}
             onSubmit={handleSubmit}
           />
@@ -288,9 +411,16 @@ export const PatientDemo: React.FC<PatientDemoProps> = ({ onBack, onSubmit }) =>
             </div>
             <h2 className="text-3xl font-bold text-gray-900">{t('information_submitted')}</h2>
             <p className="text-lg text-gray-600">{t('doctor_review')}</p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800 font-medium mb-2">{t('telemedicine')}</p>
+              <p className="text-xs text-blue-600 mb-3">{t('telemedicine_desc')}</p>
+              <button className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                {t('connect_doctor')}
+              </button>
+            </div>
             <button
               onClick={onSubmit}
-              className="w-full py-4 px-6 bg-blue-600 text-white text-lg font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full py-4 px-6 bg-gray-100 text-gray-700 text-lg font-medium rounded-lg hover:bg-gray-200 transition-colors"
             >
               {t('view_doctor_dashboard')}
             </button>

@@ -7,6 +7,8 @@ interface PatientSummaryProps {
   answers: Record<string, string>;
   description: string;
   attachments: File[];
+  symptoms: string[];
+  redFlags: string[];
   onEdit: () => void;
   onSubmit: () => void;
 }
@@ -16,12 +18,14 @@ export const PatientSummary: React.FC<PatientSummaryProps> = ({
   answers,
   description,
   attachments,
+  symptoms,
+  redFlags,
   onEdit,
   onSubmit,
 }) => {
   const { t } = useLanguage();
-
   const getAnswer = (key: string) => answers[key] || '—';
+  const hasRedFlags = redFlags.length > 0 && !redFlags.includes('red_flag_none');
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -63,6 +67,28 @@ export const PatientSummary: React.FC<PatientSummaryProps> = ({
             <p className="text-gray-900">{getAnswer('radiation')}</p>
           </div>
         </div>
+
+        {symptoms.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{t('symptoms_label')}</p>
+            <div className="flex flex-wrap gap-2">
+              {symptoms.map(s => (
+                <span key={s} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">{t(s)}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {hasRedFlags && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">{t('red_flags_label')}</p>
+            <div className="flex flex-wrap gap-2">
+              {redFlags.filter(f => f !== 'red_flag_none').map(f => (
+                <span key={f} className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">{t(f)}</span>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div>
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{t('patient_description')}</p>

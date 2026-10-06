@@ -137,6 +137,13 @@ export const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ onBack }) => {
           >
             ← Switch to Patient Demo
           </button>
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-xs font-semibold text-green-800">{t('emergency')}</p>
+            <p className="text-sm text-green-700 font-medium">{t('emergency_number')}</p>
+          </div>
+          <button className="w-full px-4 py-2 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
+            {t('telemedicine')}
+          </button>
         </div>
       </aside>
 

@@ -14,7 +14,11 @@ export const DoctorCaseView: React.FC<DoctorCaseViewProps> = ({ case: case_, onC
   const { t } = useLanguage();
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
-  const aiSummary = `Patient reports ${case_.bodyArea.toLowerCase()} pain for approximately ${case_.duration.toLowerCase()}, rated ${case_.severity}/10, with radiation toward ${case_.radiation.toLowerCase()}. Patient reports ${case_.painType.toLowerCase()}.`;
+  const hasRedFlags = case_.redFlags && case_.redFlags.length > 0 && !case_.redFlags.includes('red_flag_none');
+  const triageLabel = hasRedFlags ? t('urgent') : t('routine');
+  const triageColor = hasRedFlags ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+
+  const aiSummary = `Patient reports ${case_.bodyArea.toLowerCase()} pain for approximately ${case_.duration.toLowerCase()}, rated ${case_.severity}/10, with radiation toward ${case_.radiation.toLowerCase()}. Patient reports ${case_.painType.toLowerCase()}.${case_.symptoms && case_.symptoms.length > 0 ? ` Associated symptoms: ${case_.symptoms.join(', ')}.` : ''}${hasRedFlags ? ' Red flags present.' : ''}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -51,7 +55,12 @@ export const DoctorCaseView: React.FC<DoctorCaseViewProps> = ({ case: case_, onC
 
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t('case_label')}</p>
-                <p className="text-lg font-medium text-gray-900">{case_.complaint}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-medium text-gray-900">{case_.complaint}</p>
+                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${triageColor}`}>
+                    {triageLabel}
+                  </span>
+                </div>
               </div>
 
               <div>
@@ -85,6 +94,28 @@ export const DoctorCaseView: React.FC<DoctorCaseViewProps> = ({ case: case_, onC
                 </div>
               )}
 
+              {case_.symptoms && case_.symptoms.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{t('symptoms_label')}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {case_.symptoms.map(s => (
+                      <span key={s} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">{t(s)}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {hasRedFlags && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">{t('red_flags_label')}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {case_.redFlags.filter(f => f !== 'red_flag_none').map(f => (
+                      <span key={f} className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">{t(f)}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{t('patient_description_label')}</p>
                 <p className="text-gray-900 whitespace-pre-wrap bg-gray-50 p-4 rounded-lg">{case_.description}</p>
@@ -105,14 +136,14 @@ export const DoctorCaseView: React.FC<DoctorCaseViewProps> = ({ case: case_, onC
             </div>
 
             <div className="space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className={`border rounded-lg p-4 ${hasRedFlags ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-5 h-5 ${hasRedFlags ? 'text-red-600' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  <span className="text-sm font-semibold text-blue-800">{t('demo_ai_summary')}</span>
+                  <span className={`text-sm font-semibold ${hasRedFlags ? 'text-red-800' : 'text-blue-800'}`}>{t('demo_ai_summary')}</span>
                 </div>
-                <p className="text-blue-900 text-sm">{aiSummary}</p>
+                <p className={`text-sm ${hasRedFlags ? 'text-red-900' : 'text-blue-900'}`}>{aiSummary}</p>
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg p-4">
